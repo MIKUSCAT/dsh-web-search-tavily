@@ -1,0 +1,29 @@
+{
+  "name": "dsh-web-search-tavily",
+  "displayName": "Tavily Search",
+  "description": "Unofficial Tavily web search provider and optional tavily_search tool for DeepSeek Harness; independent of the conversation model.",
+  "version": "0.2.0",
+  "author": "MIKUSCAT",
+  "license": "MIT",
+  "type": "module",
+  "main": "index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": ["index.mjs", "cordis.patch.yml", "locale/*.json", "README.md", "LICENSE"],
+  "keywords": ["deepseek-harness", "dsh", "cordis", "tavily", "web-search"],
+  "engines": { "node": "^22.19.0 || >=24.0.0" },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.5",
+    "@deepseek-ai/schemastery": "^3.18.5",
+    "@deepseek-ai/dsh-web": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-credentials": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-launch-environment": ">=0.2.1-rc.5 <0.3.0"
+  },
+  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
+  "scripts": { "test": "node --experimental-vm-modules --test tests/*.test.mjs" }
+}

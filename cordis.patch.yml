@@ -1,0 +1,12 @@
+# Register only; the host/user owns web.searchProvider and web.fetchProvider.
+- insert:
+    - id: web-search-tavily
+      name: 'dsh-web-search-tavily'
+      config:
+        apiKeyEnv: TAVILY_API_KEY
+        searchDepth: basic
+        topic: general
+        maxResults: 8
+        includeAnswer: false
+        timeoutMs: 30000
+        registerTool: true
