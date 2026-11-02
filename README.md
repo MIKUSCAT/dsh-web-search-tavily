@@ -1,217 +1,132 @@
-# Tavily Search for DeepSeek Harness
+# DSH 混合搜索
 
-> **非官方插件**：本插件由 MIKUSCAT 个人开发维护，与 Tavily 及 DeepSeek（深度求索）没有任何隶属、合作或背书关系。"Tavily"、"DeepSeek" 等名称仅用于说明兼容对象，归各自权利人所有。
+在 DeepSeek Harness 里统一使用 **Tavily、Exa 和 Brave Search**。选择一家省着搜，或同时检索多家、合并去重。Key、强度、预算和用量，都在 DSH 的插件页里管理。
 
-独立的 Cordis 搜索提供方，包名 `dsh-web-search-tavily`，provider id 为 `tavily`。继续使用 DSH 原有的 `web_search` 工具和搜索结果卡片，不要求聊天模型支持原生搜索，不依赖 DeepSeek 搜索 API 或 Codex 登录。另外可选注册一个模型可直接调用的 `tavily_search` 工具（见下文）。
+个人维护的非官方插件，与 DeepSeek、Tavily、Exa、Brave 无隶属关系。
 
-对照并测试的宿主版本为 DSH `0.2.1-rc.5`。使用 DSH 已提供的 peer 包，没有安装脚本和额外运行时依赖。常规应用更新不会覆盖 profile 中安装的插件；未来宿主接口发生不兼容变更时仍需适配。
+![DSH 混合搜索配置页](docs/settings.png)
 
-## 快速开始 / 开箱即用
+*配置页预览，截图中的用量为演示数据。界面支持中文、英文和深色模式。*
 
-装好插件、设置好 key、重启 DSH，`web_search` 就会自动改走 Tavily，**不需要手动改任何配置文件**。
+## 安装
 
-### 1. 申请 Tavily API Key
+需要 DSH **0.2.1-rc.5** 或兼容的 0.2.x 版本，Node.js 22.19+ / 24+。本版针对 rc.5 的实际宿主接口验证。
 
-到 <https://tavily.com> 注册并在控制台复制 API key（形如 `tvly-...`）。
+在 **插件 → 添加插件 → 安装第三方插件** 中填写：
 
-### 2. 设置环境变量 `TAVILY_API_KEY`
-
-**Windows**（任选其一）：
-
-- 打开新的 PowerShell 或 cmd，执行（把值换成自己的 key）：
-
-  ```powershell
-  setx TAVILY_API_KEY "tvly-你的key"
-  ```
-
-- 或者：开始菜单搜索“编辑账户的环境变量”（系统属性 → 环境变量），在 **用户变量** 中新建，变量名 `TAVILY_API_KEY`，值为你的 key。不要改 `PATH`。
-
-**macOS / Linux**：在 shell 配置文件（`~/.zshrc`、`~/.bashrc` 等）中加一行，然后重新打开终端：
-
-```bash
-export TAVILY_API_KEY="tvly-你的key"
+```text
+github:MIKUSCAT/dsh-web-search-tavily
 ```
 
-> macOS 从 Dock/启动台打开的图形应用不一定继承 shell 配置里的变量；如果不生效，改用下面的 `.env` 方式，或从终端启动 DSH。
-
-**不想设系统环境变量？** 也可以写进 DSH 主目录下的 `.env` 文件（不存在就新建，Windows 为 `%USERPROFILE%\.dsh\.env`，macOS/Linux 为 `~/.dsh/.env`；如果设置过 `DSH_HOME`，则在该目录下），内容一行：
-
-```dotenv
-TAVILY_API_KEY=tvly-你的key
-```
-
-插件找 key 的顺序：插件配置里显式填写的 `apiKey` → 启动 DSH 时的环境变量 `TAVILY_API_KEY` → DSH 凭据服务中的同名引用（包括 `~/.dsh/.credentials.yaml` 的 `refs:` 和上面的 `~/.dsh/.env`）。
-
-### 3. 安装插件
-
-在 DSH 中打开 **插件 → 添加插件 → 安装第三方插件**，安装来源任选其一：
-
-- 从 GitHub 安装（推荐，无需下载文件）：`github:MIKUSCAT/dsh-web-search-tavily`
-- 从本地安装包安装：填 `.tgz` 文件的**绝对路径**，例如 `C:\Users\你的用户名\Downloads\dsh-web-search-tavily-0.2.1.tgz`。安装包可从 [Releases](https://github.com/MIKUSCAT/dsh-web-search-tavily/releases) 下载。
-
-> ⚠️ 用本地 `.tgz` 安装后，**不要移动、改名或删除这个 `.tgz` 文件**：profile 的 `package.json` 以 `file:` 路径引用它，文件不在原位置会导致之后重装依赖失败。建议先把它放到一个固定目录再安装。
-
-命令行也可以安装（对 `desktop` profile 同样有效）：
+命令行也可以：
 
 ```powershell
 dsh plugin --profile desktop add "github:MIKUSCAT/dsh-web-search-tavily"
-# 或
-dsh plugin --profile desktop add "C:\path\dsh-web-search-tavily-0.2.1.tgz"
 ```
 
-### 4. 完整重启 DSH 并验证
+完整退出并重新打开 DSH，然后打开 **插件 → DSH 混合搜索**。在各供应商卡片中填写 API Key、点击 **保存 Key**，再测试连接。
 
-设置环境变量或安装插件后，**完整退出 DSH**（包括系统托盘里的进程）再重新打开，新进程才会读到环境变量和插件。
+前端已经编译并随仓库发布，安装时不用构建前端，也不用部署搜索服务器。搜索直接由 DSH 后端调用供应商。
 
-验证：
+### 从 0.2.x 升级
 
-1. 插件页面能看到 **“Tavily 搜索”** 且处于启用状态；
-2. 在对话里让模型搜一个近期话题（例如“搜索一下今天的科技新闻”），能正常返回带来源的搜索结果卡片。如果提示 `TAVILY_API_KEY` 缺失或被拒绝，检查第 2 步并再次完整重启。
+插件已由 Tavily 单一搜索升级为混合搜索，版本为 **0.3.0**。仓库地址、包名 `dsh-web-search-tavily` 和宿主节点 `web-search-tavily` 继续保留，方便现有安装升级。
 
-### 自动切换说明，以及如何切回
+若旧安装仍显示 0.2.x，在插件管理页移除旧包，再从上面的 GitHub 地址安装。已有的环境变量和 DSH 凭据不会被插件删除。原来的 Tavily `apiKeyEnv`、`searchDepth`、主题、域名过滤等字段仍然可用。
 
-本插件的组合包补丁（[cordis.patch.yml](<./cordis.patch.yml>)）会把 DSH 内置 `web` 节点设为：
+安装补丁会把原生 `web_search` 设为 `hybrid-search`。如果你的 profile 以前手动固定了另一个搜索提供方，页面会出现 **设为 DSH 网页搜索**；点击即可切换。网页抓取继续使用 `http`。
 
-```yaml
-- id: web
-  config:
-    searchProvider: tavily   # web_search 改走 Tavily
-    fetchProvider: http      # 网页抓取保持 DSH 默认
-```
+## 怎么选搜索方式
 
-DSH 的节点覆盖会**整体替换** `config`，所以这里同时写上默认的 `fetchProvider: http`，保证 `web_fetch` 照常工作。
-
-profile 自己的 `cordis.patch.yml` 在插件补丁**之后**生效、优先级更高。因此：
-
-- **想切回 DeepSeek 官方搜索**（不卸载插件，`tavily_search` 工具仍可用）：在 profile 的 `cordis.patch.yml` 末尾加上下面这段（已有 `- id: web` 节点就直接改那一个，不要重复添加），然后完整重启 DSH：
-
-  ```yaml
-  - id: web
-    config:
-      searchProvider: deepseek-official
-      fetchProvider: http
-  ```
-
-- 如果你之前已经在 profile 里写过 `web` 节点（或在 DSH 设置界面改过网页搜索提供方），那以 profile 的设置为准；想用 Tavily 就把其中的 `searchProvider` 改为 `tavily`。
-
-### 配置文件在哪里
-
-DSH 桌面版使用名为 `desktop` 的 profile：
-
-| 系统 | profile 配置文件 |
+| 方式 | 行为 |
 |---|---|
-| Windows | `%USERPROFILE%\.dsh\profiles\desktop\cordis.patch.yml`（即 `C:\Users\你的用户名\.dsh\profiles\desktop\cordis.patch.yml`） |
-| macOS | `~/.dsh/profiles/desktop/cordis.patch.yml` |
-| Linux | `~/.dsh/profiles/desktop/cordis.patch.yml` |
+| 优先使用一家 | 按卡片顺序选择已配置且有可用额度的来源，一次查询只调用一家。 |
+| 多家混合 | 对同一查询使用前两家或三家已配置的来源，交错合并结果、去除重复 URL。 |
+| 失败时切换下一家 | 优先模式下的可选功能，默认关闭。启用后，凭据、配额或网络错误可触发下一家；额外请求同样计入预算。 |
 
-设置了 `DSH_HOME` 环境变量时，把上表中的 `~/.dsh` 换成该目录。命令行版的其它 profile 在同级目录，例如 `~/.dsh/profiles/web/`。修改前建议先备份；文件用 UTF-8 保存，缩进用空格。
+用卡片右上角的箭头调整优先级，用勾选框停用某一家。没有 Key 的供应商不会参与搜索。
 
-**修改搜索强度等参数**：在同一个 `cordis.patch.yml` 末尾加上本插件的节点覆盖。注意覆盖同样会整体替换 `config`，请写出你需要的全部字段（未写的字段回到代码默认值）：
+**Tavily 强度默认由你锁定。** `basic`、`fast`、`ultra-fast` 每次 1 credit，`advanced` 每次 2 credits。勾选“允许模型调整 Tavily 强度”后，模型才可以覆盖它，累计预算仍然有效。Exa 可手动选择 `lite`、`auto` 或 `deep`，默认 `lite`。Brave 使用 Web Search API；选择新闻类别时使用 News API。
 
-```yaml
-- id: web-search-tavily
-  config:
-    apiKeyEnv: TAVILY_API_KEY
-    searchDepth: advanced    # basic / advanced / fast / ultra-fast
-    topic: general           # general / news / finance
-    maxResults: 8
-    includeAnswer: false
-    timeoutMs: 30000
-    registerTool: true
-```
+调小结果数主要减少返回内容与模型上下文；Tavily 的 basic 单次费用仍为 1 credit。多家混合会分别消耗各家的额度。
 
-保存后完整重启 DSH。字段含义见下方“可配置项”。
+## Key、测试和额度
 
-## 安装与启用（补充说明）
-
-桌面版在插件管理界面安装即可（见上文第 3 步）。`desktop` profile 的启动配置由桌面应用自己加载，外部 `dsh --profile desktop --dump-config` 这类直接加载该 profile 的命令会被拒绝，但 `dsh plugin --profile desktop add/remove` 这类插件管理命令可以正常修改它。不要为了安装而修改应用归档或保护开关。
-
-源码仓库：<https://github.com/MIKUSCAT/dsh-web-search-tavily>
-
-密钥不应放入插件代码、安装包、聊天记录或版本控制。插件不读取其它提供方的配置，也不自动改用其它 key。
-## 可配置项
-
-这些字段属于 `web-search-tavily` 插件配置，可由宿主设置服务实时更新；每次查询开始时固定一份设置。示例：
-
-```yaml
-- id: web-search-tavily
-  config:
-    apiKeyEnv: TAVILY_API_KEY
-    searchDepth: basic
-    topic: general
-    # timeRange: week
-    maxResults: 8
-    # includeDomains: [example.com]
-    # excludeDomains: [spam.example]
-    # chunksPerSource: 3
-    includeAnswer: false
-    timeoutMs: 30000
-    registerTool: true
-```
-
-| 字段 | 取值 | 默认 | 说明 |
-|---|---|---|---|
-| `searchDepth` | `basic` / `advanced` / `fast` / `ultra-fast` | `basic` | 默认搜索强度。`advanced` 相关性最高，但消耗约 2 倍额度、更慢；`fast`/`ultra-fast` 延迟更低 |
-| `topic` | `general` / `news` / `finance` | `general` | 搜索类别。`news` 适合近期新闻（会带发布日期），`finance` 适合金融/公司信息 |
-| `timeRange` | `day` / `week` / `month` / `year` | 不设置 | 只返回最近一天/周/月/年的结果；留空表示不限，留空时不会发送该字段 |
-| `includeDomains` | 域名列表 | 空 | 只在这些域名内搜索（最多 300 个）；为空时不发送 |
-| `excludeDomains` | 域名列表 | 空 | 排除这些域名（最多 150 个）；为空时不发送 |
-| `chunksPerSource` | 1–3 | 不设置 | 每个来源返回的摘要片段数。Tavily 只在 `advanced` 下支持，其它强度下不发送 |
-| `registerTool` | 布尔 | `true` | 是否注册 `tavily_search` 工具；关闭后插件只作为 `web_search` 的提供方 |
-
-除 `registerTool` 外，这些字段都可在设置界面实时修改（下一次查询生效）；修改 `registerTool` 会让插件重新加载。
-
-`searchDepth` 支持 `basic`、`advanced`、`fast`、`ultra-fast`；默认 `basic`。`maxResults` 为 1–20，默认 8；DSH 工具请求的结果上限优先，提供方最多向 Tavily 请求 20 条。`includeAnswer` 默认关闭。`timeoutMs` 为 1–120000 毫秒，默认 30000，覆盖凭据读取、连接和响应体读取。`apiKey` 是可选的宿主 secret 字段，但通常应使用环境变量或凭据服务。
-
-每个查询仅调用一次 Tavily `/search`。默认不让 Tavily 自动升级搜索参数、不请求完整原文或图片。多查询仍由 DSH 自己并行、合并、去重和限制结果。返回 URL、标题、摘要以及存在时的发布日期；真正的空结果保持为空。
-
-## `tavily_search` 工具
-
-`registerTool` 为 `true`（默认）时，插件通过 DSH 的 `tools` 服务注册一个全局工具 `tavily_search`，注册方式与官方 `@deepseek-ai/dsh-tool-web` 相同（`defineTool` + `ctx.tools.register`）。它与 `web.searchProvider` 选的是哪个提供方无关，始终直接走 Tavily，复用同一套请求、超时、错误脱敏和结果转换代码。如果当前组合里没有 `tools` 服务，插件只注册提供方，不会报错。
-
-参数：
-
-| 参数 | 必填 | 说明 |
+| 供应商 | 测试按钮做什么 | 可以显示什么 |
 |---|---|---|
-| `query` | 是 | 一条搜索查询 |
-| `depth` | 否 | `basic` / `advanced` / `fast` / `ultra-fast`，省略时用配置的 `searchDepth` |
-| `topic` | 否 | `general` / `news` / `finance`，省略时用配置的 `topic` |
-| `timeRange` | 否 | `day` / `week` / `month` / `year`，省略时用配置的 `timeRange` |
-| `maxResults` | 否 | 1–20 的整数，省略时用配置的 `maxResults` |
+| Tavily | 用 `GET /usage` 验证认证连接，不执行搜索。 | 官方套餐名称、账户套餐用量、当前 Key 用量及上限、套餐剩余额度、按量付费用量。 |
+| Exa | 执行一次 `lite` 搜索，只取 1 条结果。 | 本插件请求次数、搜索响应 `costDollars.total` 返回的费用估计。账户余额通过控制台查看。 |
+| Brave | 执行一次搜索，只取 1 条结果。 | 最近一次响应头中的配额、剩余量、重置时间，以及本插件请求次数。 |
 
-工具说明会告诉模型：普通事实查询用 `basic`；深度研究、冷门或含糊的问题，或者 `basic` 结果太少/跑题时才用 `advanced`；`fast`/`ultra-fast` 用于对速度敏感的简单查询；近期事件用 `topic: news` 加 `timeRange`。工具返回的网页内容同样标注为外部不可信数据。
+Exa 和 Brave 的按钮明确标为 **测试搜索 · 1 次**，会消耗一次请求。Tavily 的成功提示明确写“认证连接成功”；这不代表已经执行过搜索。
 
-注意：如果某个 agent 预设用白名单限制了可用工具，需要把 `tavily_search` 加进白名单才能看到它；`includeDomains`、`excludeDomains`、`chunksPerSource`、`includeAnswer` 只能在插件配置里设置，模型不能按次修改。
+Tavily 的“刷新额度”调用账户用量接口；Exa 和 Brave 的“刷新记录”只读取本地及已收到的信息，不偷偷执行新的计费搜索。打开页面时自动读取一次 Tavily 额度；页面内每 10 秒刷新本地状态。
 
-## 费用与安全
+普通 Exa 搜索 Key 不能查询完整账户余额或套餐；其 Team Management 用量接口需要单独开通并使用 Service Key。本插件不把免费赠额或本地估算冒充官方余额。Brave 响应头未提供套餐名称时，也不猜测套餐等级。未知费用显示 `—`，已返回的费用明确标为估计。
 
-搜索消耗 Tavily 账户额度，按 Tavily 的现行规则计费。插件不额外调用聊天模型；搜索结果进入后续对话后仍会占用正常模型上下文和 token。
+Key 保存到 DSH 的凭据服务，下一次请求立即生效。输入框保存后清空，读取接口只返回是否配置与来源。托管凭据优先于启动环境变量及 `.env`；无需手动设置系统环境变量。仍可继续使用原来的 `TAVILY_API_KEY`、`EXA_API_KEY`、`BRAVE_API_KEY`。
 
-请求固定发到 `https://api.tavily.com/search`，禁止跟随重定向。密钥只放在 Authorization 请求头，不放在 URL 或查询 JSON。错误提示不回显上游响应正文、请求头或密钥。响应体上限为 2 MiB；超时、取消、无效凭据、配额或网络故障会明确失败，不自动重试、不回退到 DeepSeek/Codex。网络代理沿用 DSH 启动时的网络策略。
+“移除已保存 Key”删除托管值。如果环境变量或旧版 `apiKey` 仍然提供 Key，卡片会显示当前来源，并说明后备凭据仍存在。旧版直接填写的 Tavily `apiKey` 仅在凭据服务未提供值时使用。
 
-网页摘要属于外部不可信内容。DSH 原有工具仍负责外部内容标识、来源引用提示、结果展示和会话记录。
+申请 Key：[Tavily](https://app.tavily.com/) · [Exa](https://dashboard.exa.ai/) · [Brave](https://api-dashboard.search.brave.com/)
 
-## 停用或卸载
+## 预算如何生效
 
-如果只想暂时不用 Tavily 搜索，按上文“如何切回”把 `searchProvider` 改回 `deepseek-official` 即可。
+默认设置：
 
-要卸载：在插件管理界面关闭或移除本插件后完整重启 DSH。插件补丁随插件一起移除，`web` 节点自动回到 DSH 默认的 `deepseek-official`。但如果你在 profile 的 `cordis.patch.yml` 里手动写过 `searchProvider: tavily`，请先把它改回 `deepseek-official`（保留 `fetchProvider`），否则路由仍指向 `tavily`，DSH 会报告提供方不可用，而不会静默改用其它服务。卸载不删除用户环境变量、`.env` 或凭据。
+| 项目 | 默认上限 |
+|---|---:|
+| 每轮实际发出的搜索请求 | 4 次 |
+| 每轮 Tavily 消耗 | 4 credits |
+| 每日实际发出的搜索请求 | 100 次 |
+| 每次返回的来源 | 6 条 |
+| 本插件每月 Tavily 消耗 | 1,000 credits |
+| 本插件每月 Exa / Brave 请求 | 各 1,000 次 |
 
-插件正常随 profile 加载，不需要修改应用归档、打安装包补丁、添加计划任务或启动额外搜索服务器。源代码在 [index.mjs](<./index.mjs>)，组合包入口在 [cordis.patch.yml](<./cordis.patch.yml>)。
-## 验证
+“每轮”指一个 DSH Agent 从本次输入到完成回答的整个 turn，包含期间所有搜索工具调用。原生 `web_search` 一次传入多个查询时，每条查询、每个供应商都分别计数。`hybrid_search` 和兼容的 `tavily_search` 共用限制。
 
-[离线测试](<./tests/provider.test.mjs>)（仅在源码仓库中，不随 npm 包发布）覆盖 HTTP 请求字段、新配置项的请求体构建、`tavily_search` 工具注册与参数校验、来源转换、专用凭据引用、取消与完整超时、错误脱敏、结果/字节上限和 Cordis 配置。开发目录运行：
+请求发出前先预留额度，并发调用也不能越过上限。超限部分返回明确的预算提示，已经取得的来源继续返回，不会因为同批其他查询超限而丢掉有用结果。模型应使用已有结果回答；提高预算由你在界面操作。
 
-```powershell
-node --experimental-vm-modules --test tests/provider.test.mjs
+每日和每月本地上限可填 `0` 关闭；每轮限制保持启用。统计周期按运行 DSH 的本机日期计算。月统计按供应商及 Key 的摘要区分，日统计合计此 DSH 主目录下的插件调用。文件锁协调同机多个 DSH 进程，重启不会清空日/月计数。
+
+本地记录只覆盖此插件，无法统计同一个 Key 在其他程序中的调用。供应商账户的付费上限仍应在其控制台设置。请求已发送后发生超时或网络中断，Tavily 额度按本次强度保守计入并标记未确认，避免将取消误当成免费；明确的 HTTP 拒绝不计 Tavily credits，但仍计入本地请求次数。
+
+## 更多选项
+
+可设置搜索类别、时间范围、域名包含/排除、结果缓存、超时、Tavily 摘要片段和 Brave 请求间隔。新闻类别适配三家供应商；金融分类为 Tavily 专有参数。
+
+- Tavily / Exa 默认只在内存缓存 120 秒，可设为 `0` 关闭；换 Key 后不会复用旧 Key 的结果。
+- 同一轮中相同的在途查询共用一次请求；一个调用者取消不会取消其他调用者仍在等待的请求。
+- Brave 不保存结果缓存，只合并在途重复查询。默认请求间隔为 1 秒，可按自己的计划调整。
+- 时间、域名过滤在供应商请求中设置，并对返回域名再次过滤。
+- 设置修改先保留在草稿中，点击“保存设置”才写入；并发修改发生冲突时保留你的草稿。
+
+## 工具与宿主
+
+原生 `web_search` 继续显示 DSH 的搜索结果卡片。插件另外提供 `hybrid_search` 和兼容的 `tavily_search`，参数为 `query`，以及可选的 `depth`、`topic`、`timeRange`、`maxResults`。直接调用 Tavily 同样遵守来源启用、暂停、强度锁和预算。Agent 如果使用工具白名单，需要自行把额外工具加入名单；原生工具无需更名。
+
+旧 profile 固定的 `searchProvider: tavily` 仍能使用受同样预算控制的 Tavily 路由；改成 `hybrid-search` 后使用混合策略。`registerTool: false` 可只保留 provider 与原生 `web_search`。
+
+界面通过 DSH 自带的 Connection RPC 通信，Key 通过宿主凭据服务读写，设置通过原生配置表单保存。没有额外监听端口，桌面版和网页版共用接口。管理接口只接受宿主 owner。卸载时会移除搜索提供方、额外工具、管理接口和前端样式。
+
+用量文件：`$DSH_HOME/hybrid-search/usage.json`，默认在 `~/.dsh/hybrid-search/usage.json`。仅保存计数、费用估计和 Key 摘要，不保存搜索词、来源正文或明文 Key。供应商额度快照与连接测试状态仅保存在内存中。配置页不向聊天模型发送 Key。
+
+## 开发与验证
+
+```sh
+npm ci --ignore-scripts
+npm run check
+npm pack --dry-run
 ```
 
-测试需要能解析 `@deepseek-ai/schemastery`：设置环境变量 `DSH_PROFILE_DIR` 指向一个 DSH profile 目录（例如 `$env:DSH_PROFILE_DIR="$HOME\.dsh\profiles\desktop"`），或在本目录安装该包；都没有时所有测试会被跳过而不是失败。测试使用虚拟 key 和模拟 fetch，不发送真实 Tavily 请求，不消耗额度。安装后的真实搜索需另外验证，缺少 key 时不把离线测试称为联网成功。
+`check` 包含 TypeScript 检查、前端构建和 Node 测试。测试使用虚拟 Key、临时目录及模拟供应商响应，不消耗真实搜索额度；依赖缺失会失败，不会把整套测试跳过。
 
-## 源码依据
+测试覆盖三家请求格式、搜索锁定、混合去重、并发预算、跨进程用量文件、取消、缓存、错误脱敏、Key 管理和界面交互。宿主集成测试直接加载 DSH rc.5 的 Connection、凭据、WebRuntime、ToolRuntime 与原生 `web_search`，验证真实工具管线和卸载。真实账户认证与所在网络的可达性，在安装后用卡片里的测试按钮验证。
 
-DSH 官方源码版本 `dsh-v0.2.1-rc.5` 的 `packages/web/web`、`packages/web/tool-web`、`packages/web/web-search-deepseek` 定义提供方、工具输出与注册方式。Tavily 请求字段参考 [Tavily 官方 Python 客户端](https://github.com/tavily-ai/tavily-python/blob/46505f119e6ac0f30d63a4dce0ed9f923705ad97/tavily/tavily.py)。源码阅读副本和本插件目录相互独立；无需构建或替换整套 DSH。
+`lib/client.js` 是 DSH 模块加载器使用的已编译前端，随仓库提交。修改 `client/` 后执行 `npm run build`，提交源码与编译结果。
+
+接口依据：[Tavily Search](https://docs.tavily.com/documentation/api-reference/endpoint/search) · [Tavily Usage](https://docs.tavily.com/documentation/api-reference/endpoint/usage) · [Exa Search](https://exa.ai/docs/reference/search) · [Exa Team Usage](https://exa.ai/docs/reference/team-management/get-api-key-usage) · [Brave Search](https://api-dashboard.search.brave.com/api-reference/web/search/get) · [Brave 配额响应头](https://api-dashboard.search.brave.com/documentation/guides/rate-limiting) · [DSH 源码](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.1-rc.5)
 
 ## 许可证
 
-[MIT](<./LICENSE>) © 2026 MIKUSCAT
+[MIT](LICENSE) © 2026 MIKUSCAT

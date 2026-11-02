@@ -1,8 +1,7 @@
 {
   "name": "dsh-web-search-tavily",
-  "displayName": "Tavily Search",
-  "description": "Unofficial Tavily web search provider and optional tavily_search tool for DeepSeek Harness; independent of the conversation model.",
-  "version": "0.2.1",
+  "description": "Hybrid web search for DeepSeek Harness: Tavily, Exa and Brave with native settings, credentials, connection tests and budgets.",
+  "version": "0.3.0",
   "author": "MIKUSCAT",
   "license": "MIT",
   "type": "module",
@@ -11,19 +10,92 @@
     ".": "./index.mjs",
     "./package.json": "./package.json",
     "./cordis.patch.yml": "./cordis.patch.yml",
-    "./locale/*.json": "./locale/*.json"
+    "./locale/*.json": "./locale/*.json",
+    "./client": "./lib/client.js"
   },
-  "files": ["index.mjs", "cordis.patch.yml", "locale/*.json", "README.md", "LICENSE"],
-  "keywords": ["deepseek-harness", "dsh", "cordis", "tavily", "web-search"],
-  "engines": { "node": "^22.19.0 || >=24.0.0" },
+  "files": [
+    "index.mjs",
+    "src/*.mjs",
+    "lib/client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "docs/settings.png",
+    "LICENSE"
+  ],
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "dsh",
+    "tavily",
+    "exa",
+    "brave",
+    "web-search"
+  ],
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0",
+    "dsh": ">=0.2.1-rc.5 <0.3.0"
+  },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.5",
-    "@deepseek-ai/schemastery": "^3.18.5",
-    "@deepseek-ai/dsh-web": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-atomic-write": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-connection": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-locale": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.2.1-rc.5 <0.3.0",
     "@deepseek-ai/dsh-credentials": ">=0.2.1-rc.5 <0.3.0",
-    "@deepseek-ai/dsh-launch-environment": ">=0.2.1-rc.5 <0.3.0"
+    "@deepseek-ai/dsh-launch-environment": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-tools": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/dsh-web": ">=0.2.1-rc.5 <0.3.0",
+    "@deepseek-ai/schemastery": "^3.18.5"
   },
-  "dsh": { "bundle": { "patch": "./cordis.patch.yml" } },
-  "scripts": { "test": "node --experimental-vm-modules --test tests/*.test.mjs" }
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "manifestVersion": 1,
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-connection",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-plugin-manager"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "node scripts/build-client.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "check": "npm run typecheck && npm run build && npm test"
+  },
+  "devDependencies": {
+    "@deepseek-ai/dsh-api-remotes": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-api-settings-controller": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-connection": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-locale": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-store": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-plugin-manager": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-settings": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-client-ui-slots": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-credentials-local": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-package-manifest": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-scope": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-session": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-system-prompt": "0.2.1-rc.5",
+    "@deepseek-ai/dsh-tool-web": "0.2.1-rc.5",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.0",
+    "@types/react": "^18.3.27",
+    "@types/react-dom": "^18.3.7",
+    "esbuild": "^0.25.12",
+    "jsdom": "^26.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.9.3"
+  },
+  "icon": "./icon.svg"
 }

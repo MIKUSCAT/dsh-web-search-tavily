@@ -1,1 +1,1 @@
-{"meta":{"title":"Tavily Search","description":"Use Tavily as the DSH web search provider, with an optional tavily_search tool that picks search depth, topic and time range per call. Unofficial; not affiliated with Tavily or DeepSeek."}}
+{"meta": {"title": "DSH Hybrid Search", "description": "Tavily, Exa and Brave search with native settings, API keys, connection tests and quota controls."}}

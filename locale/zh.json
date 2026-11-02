@@ -1,1 +1,2 @@
-{"meta":{"title":"Tavily 搜索","description":"使用 Tavily 作为 DSH 的网页搜索提供方，并可选提供 tavily_search 工具（可按次选择搜索强度、主题和时间范围）。非 Tavily 或 DeepSeek 官方插件。"}}
+{"meta":{"title":"DSH 混合搜索","description":"Tavily、Exa、Brave 混合检索，原生界面管理 Key、搜索强度、连接测试和额度。"}}
+

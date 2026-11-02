@@ -1,5 +1,4 @@
-# Bundle patch for dsh-web-search-tavily.
-# 1. Register the Tavily provider (and the optional tavily_search tool).
+# Keep the original package/row identity so installed profiles upgrade in place.
 - insert:
     - id: web-search-tavily
       name: 'dsh-web-search-tavily'
@@ -7,17 +6,17 @@
         apiKeyEnv: TAVILY_API_KEY
         searchDepth: basic
         topic: general
-        maxResults: 8
+        maxResults: 6
         includeAnswer: false
         timeoutMs: 30000
         registerTool: true
 
-# 2. Out of the box: route DSH's web_search to Tavily. A row override replaces
+# Route DSH's web_search to the mixed provider. A row override replaces
 #    the row's whole `config`, so fetchProvider repeats dsh-base's default
 #    (`http`) to keep web_fetch working. A profile's own cordis.patch.yml applies
 #    after bundles, so a user can switch back with
 #    `- id: web` / `config: { searchProvider: deepseek-official, fetchProvider: http }`.
 - id: web
   config:
-    searchProvider: tavily
+    searchProvider: hybrid-search
     fetchProvider: http
