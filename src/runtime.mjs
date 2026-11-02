@@ -259,7 +259,7 @@ export class HybridSearchRuntime {
       return this.providerView(provider, options, credential);
     }));
     const turns = [...this.turns].slice(-8).reverse().map(([key, value]) => ({ ...value, ...this.ledger.turnView(key) }));
-    return { version: '0.3.0', providers, turns, routing: options.routing, enabled: options.enabled,
+    return { version: '0.3.1', providers, turns, routing: options.routing, enabled: options.enabled,
       dailyMaxRequests: options.dailyMaxRequests, turnMaxRequests: options.turnMaxRequests,
       turnMaxTavilyCredits: options.turnMaxTavilyCredits, now: this.now() };
   }

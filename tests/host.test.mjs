@@ -29,6 +29,8 @@ async function host(t, options = {}) {
   await root.plugin(WebRuntime, { searchProvider: 'hybrid-search' });
   await root.plugin(WebTools, { fetch: false });
   await root.plugin(Connection, {});
+  // Like the desktop host, the Typert gateway owns the single shared /api interceptor.
+  root.connection.rpc.intercept('/api', endpoint => endpoint.startsWith('gateway-test/'), async () => ({ ok: true, value: 'gateway' }));
   const plugin = await root.plugin(Plugin, options);
   const bridge = root.connection.createSharedFetchHandler('/api');
   const client = new Context();
@@ -51,6 +53,9 @@ test('real DSH Connection carrier saves keys into the real credential store and 
   assert.match(await readFile(join(directory, '.credentials.yaml'), 'utf8'), /managed-test-key/);
   assert.doesNotMatch(JSON.stringify(saved), /managed-test-key|environment-test-key/);
   assert.ok(process.env.TAVILY_API_KEY === ambientBefore, 'The plugin must not change process environment variables.');
+  const status = await client.get('connection').rpc.call('/api', 'hybrid-search/status', {});
+  assert.equal(status.ok, true);
+  assert.deepEqual(await client.get('connection').rpc.call('/api', 'gateway-test/ping', {}), { ok: true, value: 'gateway' });
 });
 
 test('real native web_search query batches and both direct tools share a per-turn budget without losing successful sources', async t => {

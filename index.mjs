@@ -80,6 +80,19 @@ export function searchTool(runtime, onlyProvider) {
 }
 
 /** Management uses DSH's authenticated RPC carrier in both Electron and Web. */
+const MANAGEMENT_METHODS = ['status', 'save-key', 'delete-key', 'test', 'usage'];
+const OWNER_PEER = Object.freeze({ principal: Object.freeze({ kind: 'owner' }) });
+
+/** Serve one Connection unary RPC envelope on an exact owner-only Fetch route. */
+export async function managementRoute(endpoint, request, handler) {
+  let message;
+  try { message = await request.json(); } catch { return new Response('body is not JSON', { status: 400 }); }
+  if (!record(message) || message.type !== 'client-request' || typeof message.rpcId !== 'string' || message.method !== endpoint)
+    return new Response('invalid client-request message', { status: 400 });
+  const result = await handler(endpoint, message.payload, request.signal, OWNER_PEER);
+  return Response.json({ type: 'server-response', rpcId: message.rpcId, result });
+}
+
 export function managementHandler(ctx, runtime, config) {
   return async (endpoint, payload, signal, peer) => {
     if (peer?.principal?.kind !== 'owner') return { ok: false, error: { code: 'FORBIDDEN', message: 'Only the host owner can manage search credentials.', details: {} } };
@@ -155,8 +168,13 @@ export function apply(ctx, config) {
   });
 
   ctx.inject(['connection'], apiCtx => {
-    const methods = new Set(['status', 'save-key', 'delete-key', 'test', 'usage'].map(method => API_PREFIX + method));
-    apiCtx.effect(() => apiCtx.connection.rpc.intercept('/api', endpoint => methods.has(endpoint),
-      managementHandler(apiCtx, runtime, config)), 'Hybrid search settings API');
+    // The single shared /api interceptor belongs to the host's Typert gateway, so the
+    // settings API uses exact Fetch routes; Connection only lets owner Peers reach them.
+    const handler = managementHandler(apiCtx, runtime, config);
+    for (const method of MANAGEMENT_METHODS) {
+      const endpoint = API_PREFIX + method;
+      apiCtx.connection.fetch.register({ path: `/api/${endpoint}`, methods: ['POST'], requestBody: 'buffered',
+        fetch: request => managementRoute(endpoint, request, handler) });
+    }
   });
 }

@@ -30,7 +30,7 @@ dsh plugin --profile desktop add "github:MIKUSCAT/dsh-web-search-tavily"
 
 ### 从 0.2.x 升级
 
-插件已由 Tavily 单一搜索升级为混合搜索，版本为 **0.3.0**。仓库地址、包名 `dsh-web-search-tavily` 和宿主节点 `web-search-tavily` 继续保留，方便现有安装升级。
+插件已由 Tavily 单一搜索升级为混合搜索，版本为 **0.3.1**。仓库地址、包名 `dsh-web-search-tavily` 和宿主节点 `web-search-tavily` 继续保留，方便现有安装升级。
 
 若旧安装仍显示 0.2.x，在插件管理页移除旧包，再从上面的 GitHub 地址安装。已有的环境变量和 DSH 凭据不会被插件删除。原来的 Tavily `apiKeyEnv`、`searchDepth`、主题、域名过滤等字段仍然可用。
 

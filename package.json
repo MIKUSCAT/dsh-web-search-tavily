@@ -1,7 +1,7 @@
 {
   "name": "dsh-web-search-tavily",
   "description": "Hybrid web search for DeepSeek Harness: Tavily, Exa and Brave with native settings, credentials, connection tests and budgets.",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "author": "MIKUSCAT",
   "license": "MIT",
   "type": "module",
